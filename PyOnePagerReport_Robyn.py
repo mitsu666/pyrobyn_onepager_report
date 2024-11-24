@@ -63,12 +63,12 @@ def plot_spend_effect_share(plotMediaShareLoopBar, plotMediaShareLoopLine, ySecS
         line_label = "CPA"
         sort_order = plotMediaShareLoopLine.sort_values('value', ascending=True)  # CPAの昇順
 
-    plotMediaShareLoopLine = plotMediaShareLoopLine.loc[sort_order.index,:]
-    temp1 = plotMediaShareLoopBar[plotMediaShareLoopBar['variable']=="spend_share"].reset_index(drop=True).loc[sort_order.index,:]
-    temp2 = plotMediaShareLoopBar[plotMediaShareLoopBar['variable']=="effect_share"].reset_index(drop=True).loc[sort_order.index,:]
-    plotMediaShareLoopBar = pd.concat([temp1,temp2])
+    # 縦軸の順序を並べ替え
+    plotMediaShareLoopBar['rn'] = pd.Categorical(plotMediaShareLoopBar['rn'], categories=sort_order['rn'], ordered=True)
+    plotMediaShareLoopLine['rn'] = pd.Categorical(plotMediaShareLoopLine['rn'], categories=sort_order['rn'], ordered=True)
+
     # プロット作成
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     palette = sns.color_palette("pastel", len(plotMediaShareLoopBar['variable'].unique()))
     ax = sns.barplot(y='rn', x='value', hue='variable', data=plotMediaShareLoopBar, orient='h', palette=palette)
 
@@ -81,8 +81,7 @@ def plot_spend_effect_share(plotMediaShareLoopBar, plotMediaShareLoopLine, ySecS
 
     # 線とラベルをプロット
     line_color = "darkblue"
-    plt.plot(plotMediaShareLoopLine['value'] / ySecScale, plotMediaShareLoopLine['rn'], 'o-', 
-             color=line_color, linewidth=1.5, label=line_label)
+    plt.plot(plotMediaShareLoopLine['value'] / ySecScale, plotMediaShareLoopLine['rn'], 'o-', color=line_color, linewidth=1.5, label=line_label)
     for x, y, value in zip(plotMediaShareLoopLine['value'] / ySecScale, plotMediaShareLoopLine['rn'], plotMediaShareLoopLine['value']):
         plt.text(x, y, f"{round(value, 2)}", color=line_color, ha='left', va='center', fontsize=20, weight='bold')
 
@@ -115,7 +114,7 @@ def plot_waterfall(plotWaterfallLoop, output_filename=None):
     Returns:
     - None: Displays the plot and optionally saves it.
     """
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     plotWaterfallLoop['start'] = plotWaterfallLoop['end'].shift(1).fillna(1)
     plotWaterfallLoop['y_pos'] = (plotWaterfallLoop['start'] + plotWaterfallLoop['end']) / 2
     colors = {"Positive": "#59B3D2", "Negative": "#E5586E"}
@@ -148,7 +147,7 @@ def plot_adstock(dt_geometric, weibullCollect=None, adstock_type="geometric", ou
     Returns:
     - None: Displays the plot and optionally saves it.
     """
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     if adstock_type == "geometric":
         sns.barplot(y='channels', x='thetas', data=dt_geometric, color="coral", orient='h')
         plt.xlabel("Thetas (%)", fontsize=20)
@@ -203,7 +202,7 @@ def plot_response_curves(dt_scurvePlot, dt_scurvePlotMean, trim_rate=1.3, output
         dt_scurvePlotMean[['channel', 'mean_carryover']],
         on='channel', how='left'
     )
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     for channel in filtered_dt_scurvePlot['channel'].unique():
         channel_data = filtered_dt_scurvePlot[filtered_dt_scurvePlot['channel'] == channel].sort_values(by='spend')
         plt.plot(channel_data['spend'], channel_data['response'], label=channel)
@@ -241,7 +240,7 @@ def plot_fitted_vs_actual(xDecompVecPlotMelted, train_size, output_filename=None
     - None: Displays the plot and optionally saves it.
     """
     xDecompVecPlotMelted['ds'] = pd.to_datetime(xDecompVecPlotMelted['ds'])
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     sns.lineplot(x='ds', y='value', hue='variable', data=xDecompVecPlotMelted, linewidth=2.5)
     
     days = sorted(xDecompVecPlotMelted['ds'].unique())
@@ -285,7 +284,7 @@ def plot_diagnostic(xDecompVecPlot, output_filename=None):
     xDecompVecPlot['predicted'] = pd.to_numeric(xDecompVecPlot['predicted'], errors='coerce')
     xDecompVecPlot['residual'] = xDecompVecPlot['actual'] - xDecompVecPlot['predicted']
     
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     sns.scatterplot(x='predicted', y='residual', data=xDecompVecPlot)
     plt.axhline(y=0, color='black', linestyle='--')
     
@@ -314,7 +313,7 @@ def plot_immediate_vs_carryover(df_imme_caov, output_filename=None):
     Returns:
     - None: Displays the plot and optionally saves it.
     """
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(10, 6))
     immediate = df_imme_caov[df_imme_caov['type'] == 'Immediate']
     carryover = df_imme_caov[df_imme_caov['type'] == 'Carryover']
     
@@ -337,3 +336,4 @@ def plot_immediate_vs_carryover(df_imme_caov, output_filename=None):
     if output_filename:
         plt.savefig(output_filename, format='jpg', dpi=300)
     plt.show()
+
